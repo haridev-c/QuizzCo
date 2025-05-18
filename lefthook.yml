@@ -1,0 +1,16 @@
+# lefthook.yml
+
+# Build commit messages
+prepare-commit-msg:
+  commands:
+    commitzen:
+      interactive: true
+      run: npx cz --hook # Or npx cz --hook
+      env:
+        LEFTHOOK: 0
+
+# Validate commit messages
+commit-msg:
+  commands:
+    "lint commit message":
+      run: npx commitlint --edit {1}
