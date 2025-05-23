@@ -15,26 +15,86 @@ datasource db {
 }
 
 model Quizz {
-  id          Int   @id @default(autoincrement())
-  title       String 
+  id          Int        @id @default(autoincrement())
+  title       String
   description String?
   questions   Question[]
 }
 
 model Question {
-  id              Int    @id @default(autoincrement())
+  id              Int            @id @default(autoincrement())
   quizzId         Int
   question        String
   options         AnswerOption[]
-  correctOptionId Int @unique
-  quizz           Quizz  @relation(fields: [quizzId], references: [id])
-  correctOption   AnswerOption @relation(fields: [correctOptionId], references: [id], name: "CorrectAnswer")
+  correctOptionId Int            @unique
+  quizz           Quizz          @relation(fields: [quizzId], references: [id])
+  correctOption   AnswerOption   @relation(fields: [correctOptionId], references: [id], name: "CorrectAnswer")
 }
 
 model AnswerOption {
-  id          Int    @id @default(autoincrement())
-  questionId  Int
-  option      String
-  question    Question @relation(fields: [questionId], references: [id])
-  correctFor  Question? @relation("CorrectAnswer")
+  id         Int       @id @default(autoincrement())
+  questionId Int
+  option     String
+  question   Question  @relation(fields: [questionId], references: [id])
+  correctFor Question? @relation("CorrectAnswer")
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean
+  image         String?
+  createdAt     DateTime
+  updatedAt     DateTime
+  sessions      Session[]
+  accounts      Account[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
 }
