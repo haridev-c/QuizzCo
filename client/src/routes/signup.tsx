@@ -4,28 +4,33 @@ export const Route = createFileRoute("/signup")({
   component: RouteComponent,
 });
 
+// library imprts
+import { useForm } from "@tanstack/react-form";
+import { type } from "arktype";
+
 // shadcn imports
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 
-const formSchema = z.object({
-  email: z.string(),
-  password: z.string(),
+const PasswordSchema = type("string").atLeastLength(8).configure({
+  message: "Password must be at least 8 characters long",
 });
 
-type FormData = z.infer<typeof formSchema>;
+const EmailSchema = type("string.email").configure({
+  message: "Please enter a valid email address",
+});
 
 function RouteComponent() {
-  const { register, handleSubmit } = useForm({
-    resolver: zodResolver(formSchema),
+  const form = useForm({
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+    onSubmit: ({ value }) => {
+      console.log(value);
+      form.reset();
+    },
   });
-
-  const onSubmit = (data: FormData) => {
-    console.log(data);
-  };
 
   return (
     <>
@@ -36,25 +41,79 @@ function RouteComponent() {
           </div>
           <div className="flex flex-1 flex-col p-1">
             <form
-              onSubmit={handleSubmit(onSubmit)}
+              onSubmit={(e) => {
+                e.preventDefault();
+                form.handleSubmit();
+              }}
               className="flex h-full flex-1 flex-col items-center justify-center px-4"
             >
               <h1>Create new account</h1>
-              <Input
-                placeholder="Email"
-                type="email"
-                className="md:my-2"
-                required
-                {...register("email")}
+              <form.Field
+                name="email"
+                validators={{
+                  onChange: EmailSchema,
+                }}
+                children={(field) => (
+                  <>
+                    <Input
+                      name={field.name}
+                      value={field.state.value}
+                      placeholder="Email"
+                      type="email"
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      className="md:my-2"
+                      required
+                    />
+                    {!field.state.meta.isValid && (
+                      <span
+                        role="alert"
+                        className="w-full text-sm text-red-500"
+                      >
+                        {field.state.meta.errors.join(", ")}
+                      </span>
+                    )}
+                  </>
+                )}
               />
-              <Input
-                placeholder="Password"
-                type="password"
-                className="my-8 md:my-2"
-                required
-                {...register("password")}
+              <form.Field
+                name="password"
+                validators={{
+                  onChange: PasswordSchema,
+                }}
+                children={(field) => (
+                  <>
+                    <Input
+                      name={field.name}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="Password"
+                      type="password"
+                      className="md:my-2"
+                      required
+                      max={16}
+                    />
+                    {!field.state.meta.isValid && (
+                      <span
+                        role="alert"
+                        className="my-2 w-full text-sm text-red-500"
+                      >
+                        {field.state.meta.errors.join(", ")}
+                      </span>
+                    )}
+                  </>
+                )}
               />
-              <Button className="w-full md:my-2">Sign Up</Button>
+
+              <form.Subscribe
+                selector={(state) => [state.canSubmit, state.isSubmitting]}
+                children={([canSubmit, isSubmitting]) => (
+                  <Button type="submit" disabled={!canSubmit}>
+                    {isSubmitting ? "Submitting..." : "Submit"}
+                  </Button>
+                )}
+              />
             </form>
           </div>
         </div>
